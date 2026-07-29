@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0f665f">
+    <meta name="description" content="Viva is a warm, voice-first daily Companion Moment for seniors.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Viva">
+    <title>Viva — Companion Moment</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="styles.css">
+    <script src="content.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#appMain">Skip to today's moment</a>
+
+    <header class="site-header" aria-label="Viva header">
+      <div class="header-inner">
+        <div class="brand" aria-label="Viva Companion Moment">
+          <img src="icon.svg" width="64" height="64" alt="">
+          <div>
+            <div class="brand-name">Viva</div>
+            <div class="brand-tagline">Companion Moment</div>
+          </div>
+        </div>
+
+        <div class="preferences" aria-label="Display preferences">
+          <button id="largeTextToggle" class="preference-button" type="button" aria-pressed="false">
+            Large Text: Off
+          </button>
+          <button id="contrastToggle" class="preference-button" type="button" aria-pressed="true">
+            High Contrast: On
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="appMain" class="app-main" tabindex="-1">
+      <section class="screen-card" aria-labelledby="loadingTitle">
+        <h1 id="loadingTitle">Welcome to Viva.</h1>
+        <p>Preparing today's Companion Moment…</p>
+      </section>
+    </main>
+
+    <div id="liveRegion" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <footer class="site-footer">
+      <p>Private on this device. No account needed.</p>
+    </footer>
+  </body>
+</html>

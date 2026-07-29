@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">Viva app icon</title>
+  <desc id="description">A warm cream figure forming a welcoming V on a calm teal background.</desc>
+  <rect width="512" height="512" fill="#0f665f"/>
+  <circle cx="256" cy="146" r="42" fill="#fff4df"/>
+  <path d="M130 191 C174 232 210 282 256 370 C302 282 338 232 382 191" fill="none" stroke="#fff4df" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M173 188 C194 208 222 221 256 221 C290 221 318 208 339 188" fill="none" stroke="#fff4df" stroke-width="24" stroke-linecap="round"/>
+</svg>

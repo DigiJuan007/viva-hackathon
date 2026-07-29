@@ -1,0 +1,23 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Env / secrets — never commit real keys to this public repo
+.env
+.env.*
+*.key
+*.pem
+
+# Logs
+npm-debug.log*
+*.log
+
+# Local scratch
+node_modules/
+dist/
+.cache/
