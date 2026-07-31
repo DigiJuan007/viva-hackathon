@@ -7,7 +7,7 @@ Built for **Build with Gemma NYC — On-Device AI for Healthcare** (Saturday, Au
 
 ## The problem
 
-Isolation is a documented health outcome for seniors — comparable in impact to smoking or obesity — and it rarely gets treated because it has been normalized. Most "senior tech" assumes a comfort with apps and typing that many older adults don't have. Meanwhile, the stories and memories they carry are locked in their heads, at risk of being lost.
+Isolation carries a mortality risk on par with smoking up to 15 cigarettes a day, and greater than obesity or physical inactivity — U.S. Surgeon General's 2023 Advisory on Social Connection, drawing on Holt-Lunstad et al.'s meta-analysis (*Social Relationships and Mortality Risk*, PLOS Medicine, 2010) — and it rarely gets treated because it has been normalized. Most "senior tech" assumes a comfort with apps and typing that many older adults don't have. Meanwhile, the stories and memories they carry are locked in their heads, at risk of being lost.
 
 ## What Viva does
 
@@ -27,29 +27,42 @@ Viva's inference runs on **Gemma 4** (Google DeepMind, Apache 2.0), served local
 - **Data path:** app → `127.0.0.1:11434` → local model → app. No DNS resolution, no external host, no telemetry call in that loop.
 - **Why this matters:** on-device inference removes the hard part of health-data handling by architecture, not by a compliance layer bolted on after the fact — nothing is transmitted, so there is nothing to intercept, log, or subpoena on the wire. This repo does not claim any formal certification; see **Scope**, below.
 
-The static shell in this repo (`app.js`, `content.js`) is the reusable UX and content-pack pattern the on-device model plugs into. The exact integration point is marked in `app.js`:
+The static shell in this repo (`app.js`, `content.js`) is the reusable UX and content-pack pattern the on-device model plugs into. As of 2026-07-31, `answerQuestion()` in `app.js` calls the local Ollama endpoint directly:
 
 ```js
 // AI BACKEND SWAP POINT:
 async function answerQuestion(day, question) {
-  void question;
-  return day.help;
+  const fallback = day.help;
+  try {
+    const response = await fetch("http://127.0.0.1:11434/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(12000),
+      body: JSON.stringify({ model: "gemma4:e4b", stream: false, think: false, messages: [ /* ... */ ] })
+    });
+    if (!response.ok) return fallback;
+    const data = await response.json();
+    const content = data && data.message && data.message.content;
+    return (typeof content === "string" && content.trim()) ? content.trim() : fallback;
+  } catch (err) {
+    return fallback; // Ollama not running, timeout, or network hiccup — never surface an error to the user.
+  }
 }
 ```
 
-As shipped here, this function returns static, pre-written, day-specific help — the MVP intentionally makes **zero network calls**. The Saturday build points this function at the local Ollama endpoint above so the "Ask a Question" flow and the legacy-capture conversation run through live on-device Gemma 4 inference instead.
+If Ollama isn't running, times out, or errors, this falls back to the static `day.help` text automatically — the app never shows a raw error or hangs. **Requires Ollama running locally** (`ollama serve`) with `gemma4:e4b` pulled for the live-inference path; without it, the app still works fully on the static fallback text.
 
 ## How to run it
 
-No build step, no dependencies, no account. From this directory:
+No build step, no dependencies, no account required for the app itself. From this directory:
 
 ```sh
 python3 -m http.server 8080
 ```
 
-Then open `http://localhost:8080` in a browser. Opening `index.html` directly as a file also works for everything except installability (service workers require a real server or `localhost`).
+Then open `http://localhost:8080` in a browser. Opening `index.html` directly as a file also works for everything except installability (service workers require a real server or `localhost`) and live Gemma inference (loopback fetch calls require an HTTP context).
 
-**To add live on-device inference:** install [Ollama](https://ollama.com), run `ollama pull gemma4:e4b`, start `ollama serve`, and point the `answerQuestion` function in `app.js` at `http://127.0.0.1:11434/api/chat`. See `app.js` for the exact swap point.
+**For live on-device inference:** install [Ollama](https://ollama.com), run `ollama pull gemma4:e4b`, and start `ollama serve` before opening the app. See `app.js`'s `// AI BACKEND SWAP POINT` comment for the exact integration.
 
 **Install on a phone/tablet:** open the hosted app in a mobile browser and use "Add to Home Screen" (iOS Safari) or "Install app" (Android Chrome). The app installs as a standalone PWA and works offline once loaded.
 

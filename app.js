@@ -316,11 +316,59 @@
   }
 
   // AI BACKEND SWAP POINT:
-  // Replace only this async function later. The shipped MVP is intentionally
-  // static, makes no network calls, and always returns the current day's help.
+  // Wired 2026-07-31 to the local Ollama/Gemma runtime proven in
+  // GEMMA_RUNTIME_PROVEN_2026-07-29.md. On ANY failure — server not running,
+  // timeout, network hiccup, malformed response — this MUST fall back to
+  // day.help. A senior user or a judge must never see a raw error or a hung
+  // UI: this is a live-demo resilience requirement, not speculative
+  // robustness.
   async function answerQuestion(day, question) {
-    void question;
-    return day.help;
+    const fallback = day.help;
+    const askedSomething = typeof question === "string" && question.trim().length > 0;
+    const userContent = askedSomething
+      ? `Today's theme is "${day.title}". The prepared guidance is: "${day.help}" The person asked: "${question.trim()}"`
+      : `Today's theme is "${day.title}". The prepared guidance is: "${day.help}" Offer a short, warm expansion of this in your own words — the person hasn't typed a specific question.`;
+
+    try {
+      const response = await fetch("http://127.0.0.1:11434/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // 12s ceiling: covers a cold model load (measured 6.6-11s the first call after the
+        // Ollama server has been idle) plus generation time, without hanging the UI indefinitely.
+        signal: AbortSignal.timeout(12000),
+        body: JSON.stringify({
+          model: "gemma4:e4b",
+          stream: false,
+          // think:false — this model emits a hidden reasoning trace by default that costs
+          // several extra seconds of latency and is never shown to the user. Disabling it
+          // dropped a measured warm call from ~7.6s/382 tokens to ~1.0s/30 tokens with no
+          // loss in reply quality (2026-07-31 measurement, see GEMMA_PWA_WIRING doc).
+          think: false,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are Viva, a warm, patient companion for a senior in New York. Speak briefly and " +
+                "clearly, one thought at a time, never rushed, never clinical. You never diagnose or give " +
+                "medical advice. Keep every reply to 1-3 short sentences, no more."
+            },
+            { role: "user", content: userContent }
+          ]
+        })
+      });
+
+      if (!response.ok) return fallback;
+
+      const data = await response.json();
+      const content = data && data.message && data.message.content;
+      if (typeof content === "string" && content.trim().length > 0) {
+        return content.trim();
+      }
+      return fallback;
+    } catch (err) {
+      console.warn("Viva: Gemma call failed, falling back to static help text.", err);
+      return fallback;
+    }
   }
 
   function playSpeech() {
