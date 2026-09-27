@@ -1,4 +1,4 @@
-> **Built by Juan Esteban Guardiola · [VentureMatic](https://venturematic.com)** · [juan@venturematic.com](mailto:juan@venturematic.com)
+> **Built by Juan Guardiola · [VentureMatic](https://venturematic.com)** · [juan@venturematic.com](mailto:juan@venturematic.com)
 > My first hackathon, August 1, 2026: the day I became a builder.
 
 # Viva — Companion Moment
